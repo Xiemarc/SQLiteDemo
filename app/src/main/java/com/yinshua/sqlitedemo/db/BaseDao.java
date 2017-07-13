@@ -26,7 +26,7 @@ public abstract class BaseDao<T> implements IBaseDao<T> {
      * ]
      * 持有数据库操作类的引用
      */
-    private SQLiteDatabase database;
+    protected SQLiteDatabase sqLiteDatabase;
     /**
      * 保证实例化一次
      */
@@ -52,7 +52,7 @@ public abstract class BaseDao<T> implements IBaseDao<T> {
         if (!isInit) {
             //如果未实例化
             entityClass = entity;
-            database = sqLiteDatabase;
+            this.sqLiteDatabase = sqLiteDatabase;
             if (entity.getAnnotation(DbTable.class) == null) {
                 //如果没有使用注解，那么就直接使用实体bean对象的类名当做表名
                 tableName = entity.getClass().getSimpleName();
@@ -60,11 +60,11 @@ public abstract class BaseDao<T> implements IBaseDao<T> {
                 //使用注解，那么就直接拿到注解的value值当做表名
                 tableName = entity.getAnnotation(DbTable.class).value();//
             }
-            if (!database.isOpen()) {
+            if (!sqLiteDatabase.isOpen()) {
                 return false;
             }
             if (!TextUtils.isEmpty(createTable())) {
-                database.execSQL(createTable());
+                sqLiteDatabase.execSQL(createTable());
             }
             cacheMap = new HashMap<>();
             initCacheMap();
@@ -80,49 +80,56 @@ public abstract class BaseDao<T> implements IBaseDao<T> {
         String sql = "select * from " + this.tableName + " limit 1 , 0";//查询一条，看下有数据没
         Cursor cursor = null;
         try {
-            cursor = database.rawQuery(sql, null);
-            String[] columnNames = cursor.getColumnNames();//列名拿到
-            Field[] colmunFields = entityClass.getDeclaredFields();
-            for (Field field : colmunFields) {
-                field.setAccessible(true);
-            }
-            //对应关系
-            for (String columnName : columnNames) {
-                //如果找到对应的Filed就赋值给他  User的成员变量
-                Field colmunFiled = null;//列名
-                for (Field field : colmunFields) {
-                    String fieldName = null;
-                    if (field.getAnnotation(DbField.class) != null) {//成员变量有注解
-                        fieldName = field.getAnnotation(DbField.class).value();
+            cursor = sqLiteDatabase.rawQuery(sql, null);
+            /**
+             * 表的列名数组
+             */
+            String[] columnNames = cursor.getColumnNames();
+            /**
+             * 拿到Filed数组
+             */
+            Field[] columnFields = entityClass.getDeclaredFields();
+            for (Field filed : columnFields) {
+                filed.setAccessible(true);
+
+                Field columnFiled = null;
+                String colmunName = null;
+                /**
+                 * 开始找对应关系
+                 */
+                for (String cn : columnNames) {
+                    String filedName = null;
+                    if (filed.getAnnotation(DbField.class) != null) {
+                        filedName = filed.getAnnotation(DbField.class).value();
                     } else {
-                        //没有DbField注解
-                        fieldName = field.getName();
+                        filedName = filed.getName();
                     }
-                    //如果表的列名，等于了成员变量的注解名字
-                    if (columnName.equals(fieldName)) {
-                        colmunFiled = field;
+                    if (cn.equals(filedName)) {
+                        columnFiled = filed;
+                        colmunName = cn;
                         break;
                     }
                 }
-                //找到对应关系
-                if (colmunFiled != null) {
-                    //表的名字，属性名字
-                    cacheMap.put(columnName, colmunFiled);
+                //找到了对应关系
+                if (columnFiled != null) {
+                    cacheMap.put(colmunName, columnFiled);
                 }
             }
         } catch (Exception e) {
-
+            e.printStackTrace();
         } finally {
             cursor.close();
         }
     }
 
+    public String getTableName() {
+        return tableName;
+    }
 
     @Override
     public Long insert(T entity) {
-        Map<String, String> map = getValues(entity);
-        ContentValues values = getContentValues(map);
-        long result = database.insert(tableName, null, values);
+        ContentValues values = getContentValues(entity);
+        long result = sqLiteDatabase.insert(tableName, null, values);
         return result;
     }
 
@@ -161,36 +168,32 @@ public abstract class BaseDao<T> implements IBaseDao<T> {
     }
 
     /**
-     * 将map转化为ContentValues
+     * 将
      *
-     * @param map
+     * @param entity
      * @return
      */
-    private ContentValues getContentValues(Map<String, String> map) {
+    private ContentValues getContentValues(T entity) {
         ContentValues contentValues = new ContentValues();
-        Set<String> keys = map.keySet();
-        Iterator<String> iterator = keys.iterator();
-        while (iterator.hasNext()) {
-            String key = iterator.next();
-            String value = map.get(key);
-            if (value != null) {
-                contentValues.put(key, value);
+        try {
+            for (Map.Entry<String, Field> me : cacheMap.entrySet()) {
+                if (me.getValue().get(entity) == null) {
+                    continue;
+                }
+                contentValues.put(me.getKey(), me.getValue().get(entity).toString());
             }
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
         }
         return contentValues;
     }
 
     @Override
     public int update(T entity, T where) {
-        int result = -1;
-        // 将目标对象转化为map
-        Map<String, String> values = getValues(entity);
-        //将条件对象转化成map
-        Map<String, String> whereClause = getValues(where);
-        Condition condition = new Condition(whereClause);
-        ContentValues contentValues = getContentValues(values);
-        result = database.update(tableName, contentValues, condition.getWhereClause(), condition.getWhereArgs());
-        return result;
+        ContentValues contentValues = getContentValues(entity);
+        Condition condition = new Condition(getContentValues(where));
+        int update = sqLiteDatabase.update(tableName, contentValues, condition.whereClause, condition.whereArgs);
+        return update;
     }
 
     /**
@@ -201,10 +204,10 @@ public abstract class BaseDao<T> implements IBaseDao<T> {
      */
     @Override
     public int delete(T where) {
-        Map<String, String> whereValues = getValues(where);
+        ContentValues whereValues = getContentValues(where);
         Condition condition = new Condition(whereValues);
-        int result = database.delete(tableName, condition.getWhereClause(), condition.getWhereArgs());
-        return result;
+        int delete = sqLiteDatabase.delete(tableName, condition.getWhereClause(), condition.getWhereArgs());
+        return delete;
     }
 
     /**
@@ -229,16 +232,23 @@ public abstract class BaseDao<T> implements IBaseDao<T> {
      */
     @Override
     public List<T> query(T where, String orderBy, Integer startIndex, Integer limit) {
-        Map<String, String> values = getValues(where);
-        String limitString = null;//限制条件语句
+        String limitString = null;
         if (startIndex != null && limit != null) {
-            limitString = startIndex + " , " + limit;
+            limitString = startIndex + "," + limit;
         }
-        Condition condition = new Condition(values);
-        Cursor cursor = database.query(tableName, null, condition.getWhereClause(),
-                condition.getWhereArgs(), null, null, orderBy, limitString);
-        List<T> result = getResult(cursor, where);
-        cursor.close();
+        Condition condition = new Condition(getContentValues(where));
+        Cursor cursor = null;
+        List<T> result = new ArrayList<>();
+        try {
+            cursor = sqLiteDatabase.query(tableName, null, condition.getWhereClause(), condition.whereArgs, null, null, orderBy, limitString);
+            result = getResult(cursor, where);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
         return result;
     }
 
@@ -296,7 +306,7 @@ public abstract class BaseDao<T> implements IBaseDao<T> {
      * 封装修改语句
      */
     class Condition {
-        public Condition(Map<String, String> whereClause) {
+        public Condition(ContentValues whereClause) {
             ArrayList list = new ArrayList();//拼接条件值的
             StringBuilder stringBuilder = new StringBuilder();// 拼接条件语句的
             stringBuilder.append(" 1=1 ");//让它恒成立 1=1 and name = ? ……
@@ -304,7 +314,7 @@ public abstract class BaseDao<T> implements IBaseDao<T> {
             Iterator<String> iterator = keys.iterator();
             while (iterator.hasNext()) {
                 String key = iterator.next();
-                String value = whereClause.get(key);
+                String value = (String) whereClause.get(key);
                 if (null != value) {
                     //拼接条件查询语句 1=1 and name = ? and password = ?
                     stringBuilder.append(" and " + key + " =?");

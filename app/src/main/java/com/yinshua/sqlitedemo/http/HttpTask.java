@@ -5,6 +5,7 @@ import com.yinshua.sqlitedemo.http.interfaces.IHttpListener;
 import com.yinshua.sqlitedemo.http.interfaces.IHttpService;
 
 import java.io.UnsupportedEncodingException;
+import java.util.concurrent.FutureTask;
 
 /**
  * 请求任务
@@ -14,6 +15,7 @@ import java.io.UnsupportedEncodingException;
 
 public class HttpTask<T> implements Runnable {
     private IHttpService httpService;
+    private FutureTask futureTask;
 
     public HttpTask(RequestHodler<T> requestHodler) {
         httpService = requestHodler.getHttpService();
@@ -36,5 +38,24 @@ public class HttpTask<T> implements Runnable {
     @Override
     public void run() {
         httpService.excute();
+    }
+
+    /**
+     * 真正开始下载任务
+     */
+    public void start() {
+        futureTask = new FutureTask(this, null);
+        try {
+            ThreadPoolManager.getInstance().execte(futureTask);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void pause() {
+        httpService.pause();
+        if (futureTask != null) {
+            ThreadPoolManager.getInstance().removeTask(futureTask);
+        }
     }
 }

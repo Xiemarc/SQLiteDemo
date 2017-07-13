@@ -1,15 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
     <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:onClick="jumpsql"
-        android:text="数据库框架"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:text="数据库框架" />
+
     <Button
-        android:onClick="jumpinternet"
-        android:text="网络框架"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:onClick="jumpinternet"
+        android:text="网络框架" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="loadapkone"
+        android:text="加载第一个插件apk" />
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="loadapktwo"
+        android:text="加载第二个插件apk" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="jumpapk"
+        android:text="跳转插件apk" />
 </LinearLayout>

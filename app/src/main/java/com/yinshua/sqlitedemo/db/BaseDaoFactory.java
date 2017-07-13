@@ -15,10 +15,14 @@ public class BaseDaoFactory {
 
     private static BaseDaoFactory instance = new BaseDaoFactory();
 
-    public BaseDaoFactory() {
+    private BaseDaoFactory() {
         //外置卡
-        sqliteDatabasePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/user.db";
+        sqliteDatabasePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/marc.db";
         openDatabase();
+    }
+
+    public static BaseDaoFactory getInstance() {
+        return instance;
     }
 
     /**
@@ -49,7 +53,5 @@ public class BaseDaoFactory {
         this.sqLiteDatabase = SQLiteDatabase.openOrCreateDatabase(sqliteDatabasePath, null);
     }
 
-    public static BaseDaoFactory getInstance() {
-        return instance;
-    }
+
 }

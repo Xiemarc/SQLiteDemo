@@ -1,9 +1,8 @@
 package com.yinshua.sqlitedemo.http.download;
 
-import android.util.Log;
-
 import com.yinshua.sqlitedemo.http.interfaces.IHttpListener;
 import com.yinshua.sqlitedemo.http.interfaces.IHttpService;
+import com.yinshua.sqlitedemo.utils.logger.Logger;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -17,6 +16,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by marc on 2017/7/5.
@@ -48,6 +48,11 @@ public class FileDownHttpService implements IHttpService {
      */
     private HttpRespnceHandler httpRespnceHandler = new HttpRespnceHandler();
 
+    /**
+     * 只允许一个线程去改变，线程安全
+     */
+    private AtomicBoolean pause = new AtomicBoolean(false);
+
     @Override
     public void setUrl(String url) {
         this.url = url;
@@ -59,8 +64,8 @@ public class FileDownHttpService implements IHttpService {
 
     @Override
     public void excute() {
-        constrcutHeader();
         httpGet = new HttpGet(url);
+        constrcutHeader();
         //下载策略，不要请求参数
 //        ByteArrayEntity byteArrayEntity=new ByteArrayEntity(requestDate);
 //        httpPost.setEntity(byteArrayEntity);
@@ -80,7 +85,7 @@ public class FileDownHttpService implements IHttpService {
         while (iterator.hasNext()) {
             String key = iterator.next();
             String value = headerMap.get(key);
-            Log.i(TAG, "请求头信息:" + key + " value =" + value);
+            Logger.i(TAG, "请求头信息:" + key + " value =" + value);
             httpGet.addHeader(key, value);
         }
     }
@@ -97,7 +102,7 @@ public class FileDownHttpService implements IHttpService {
 
     @Override
     public void pause() {
-
+        this.pause.compareAndSet(false, true);
     }
 
     @Override
@@ -117,7 +122,7 @@ public class FileDownHttpService implements IHttpService {
 
     @Override
     public boolean isPause() {
-        return false;
+        return pause.get();
     }
 
     /**
@@ -127,7 +132,7 @@ public class FileDownHttpService implements IHttpService {
         @Override
         public String handleResponse(HttpResponse response) throws ClientProtocolException {
             int code = response.getStatusLine().getStatusCode();
-            if (code == 200) {
+            if (code == 200 || code == 206) {
                 httpListener.onSuccess(response.getEntity());
             } else {
                 httpListener.onFail();

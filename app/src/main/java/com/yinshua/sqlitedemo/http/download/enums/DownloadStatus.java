@@ -1,4 +1,4 @@
-package com.yinshua.sqlitedemo.http.download;
+package com.yinshua.sqlitedemo.http.download.enums;
 
 /**
  * 下载状态

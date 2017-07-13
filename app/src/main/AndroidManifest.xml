@@ -5,8 +5,10 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS" />
 
     <application
+        android:name=".MApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -22,6 +24,7 @@
         </activity>
         <activity android:name=".db.DbActivity" />
         <activity android:name=".http.HttpActivity" />
+        <activity android:name="com.yinshua.plugincore.ProxyActivity" />
     </application>
 
 </manifest>

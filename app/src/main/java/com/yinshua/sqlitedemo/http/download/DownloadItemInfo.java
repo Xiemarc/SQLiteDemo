@@ -1,25 +1,152 @@
 package com.yinshua.sqlitedemo.http.download;
 
+import com.yinshua.sqlitedemo.db.annotion.DbTable;
 import com.yinshua.sqlitedemo.http.HttpTask;
 
 /**
  * Created by marc on 2017/7/5.
  */
-
+@DbTable("t_downloadInfo")
 public class DownloadItemInfo extends BaseEntity<DownloadItemInfo> {
-    private long currentLength;
+    public long currentLength;
 
-    private long totalLength;
+    public long totalLength;
 
-    private String url;
+    public transient HttpTask httpTask;
+    /**
+     * 下载id
+     */
+    public Integer id;
 
-    private String filePath;
-    //序列化需要所有成员变量都实现序列化，所以transient 排除序列化，
-    private transient HttpTask httpTask;
-    //下载的状态
-    private DownloadStatus status;
+    /**
+     * 下载url
+     */
+    public String url;
 
-    public DownloadItemInfo() {
+    /**
+     * 下载存储的文件路径
+     */
+    public String filePath;
+
+    /**
+     * 下载文件显示名
+     */
+    public String displayName;
+    /**
+     * 下载文件总大小
+     */
+    public Long totalLen;
+
+    /**
+     * 下载文件当前大小
+     */
+    public Long currentLen;
+
+    /**
+     * 下载开始时间
+     */
+    public String startTime;
+
+    /**
+     * 下载结束时间
+     */
+    public String finishTime;
+
+    /**
+     * 用户id
+     */
+    public String userId;
+
+    /**
+     * 下载任务类型
+     */
+    public String httpTaskType;
+
+    /**
+     * 下载优先级
+     */
+    public Integer priority;
+
+    /**
+     * 下载停止模式
+     */
+    public Integer stopMode;
+
+
+    /**
+     * 下载的状态
+     */
+    public Integer status;
+
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+
+    public Long getTotalLen() {
+        return totalLen;
+    }
+
+    public void setTotalLen(Long totalLen) {
+        this.totalLen = totalLen;
+    }
+
+    public Long getCurrentLen() {
+        return currentLen;
+    }
+
+    public void setCurrentLen(Long currentLen) {
+        this.currentLen = currentLen;
+    }
+
+
+    public void setFinishTime(String finishTime) {
+        this.finishTime = finishTime;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getHttpTaskType() {
+        return httpTaskType;
+    }
+
+    public void setHttpTaskType(String httpTaskType) {
+        this.httpTaskType = httpTaskType;
+    }
+
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Integer priority) {
+        this.priority = priority;
+    }
+
+    public Integer getStopMode() {
+        return stopMode;
+    }
+
+    public void setStopMode(Integer stopMode) {
+        this.stopMode = stopMode;
     }
 
     public DownloadItemInfo(String url, String filePath) {
@@ -27,11 +154,15 @@ public class DownloadItemInfo extends BaseEntity<DownloadItemInfo> {
         this.filePath = filePath;
     }
 
-    public DownloadStatus getStatus() {
+    public DownloadItemInfo() {
+    }
+
+
+    public Integer getStatus() {
         return status;
     }
 
-    public void setStatus(DownloadStatus status) {
+    public void setStatus(Integer status) {
         this.status = status;
     }
 
@@ -73,6 +204,10 @@ public class DownloadItemInfo extends BaseEntity<DownloadItemInfo> {
 
     public void setHttpTask(HttpTask httpTask) {
         this.httpTask = httpTask;
+    }
+
+    public void setStartTime(String startTime) {
+        this.startTime = startTime;
     }
 
 }

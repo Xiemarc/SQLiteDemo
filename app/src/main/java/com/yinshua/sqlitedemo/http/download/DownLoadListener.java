@@ -3,6 +3,7 @@ package com.yinshua.sqlitedemo.http.download;
 import android.os.Handler;
 import android.os.Looper;
 
+import com.yinshua.sqlitedemo.http.download.enums.DownloadStatus;
 import com.yinshua.sqlitedemo.http.download.interfaces.IDownListener;
 import com.yinshua.sqlitedemo.http.download.interfaces.IDownloadServiceCallable;
 import com.yinshua.sqlitedemo.http.interfaces.IHttpService;
@@ -113,7 +114,8 @@ public class DownLoadListener implements IDownListener {
                         return;
                     }
                     if (this.getHttpService().isPause()) {
-                        downloadServiceCallable.onDownloadError(downloadItemInfo, 2, "用户暂停了");
+                        //用户暂停了
+                        downloadServiceCallable.onDownloadPause(downloadItemInfo);
                         return;
                     }
                     bos.write(buffer, 0, length);
@@ -172,7 +174,11 @@ public class DownLoadListener implements IDownListener {
 
     @Override
     public void addHttpHeader(Map<String, String> headerMap) {
-
+        long length = getFile().length();
+        if (length > 0L) {
+            //断点下载
+            headerMap.put("RANGE", "bytes=" + length + "-");
+        }
     }
 
     /**
@@ -202,7 +208,8 @@ public class DownLoadListener implements IDownListener {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        downloadServiceCallable.onCurrentSizeChanged(copyDownloadItemInfo, downlength / totalLength, speed);
+//                        downloadServiceCallable.onCurrentSizeChanged(copyDownloadItemInfo, downlength / totalLength, speed);
+                        downloadServiceCallable.onCurrentSizeChanged(copyDownloadItemInfo, downlength, speed);
                     }
                 });
             }
@@ -215,7 +222,7 @@ public class DownLoadListener implements IDownListener {
      * @param downloading
      */
     private void downloadStatusChange(DownloadStatus downloading) {
-        downloadItemInfo.setStatus(downloading);
+        downloadItemInfo.setStatus(downloading.getValue());
         final DownloadItemInfo copyDownloadItemInfo = downloadItemInfo.copy();
         if (downloadServiceCallable != null) {
             synchronized (this.downloadServiceCallable) {
@@ -235,7 +242,7 @@ public class DownLoadListener implements IDownListener {
      * @param totalLength
      */
     private void receviceTotalLength(long totalLength) {
-        downloadItemInfo.setCurrentLength(totalLength);
+        downloadItemInfo.setTotalLength(totalLength);
         final DownloadItemInfo copyDownloadItemInfo = downloadItemInfo.copy();
         if (downloadServiceCallable != null) {
             synchronized (this.downloadServiceCallable) {

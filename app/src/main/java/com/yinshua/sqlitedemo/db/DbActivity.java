@@ -40,14 +40,14 @@ public class DbActivity extends AppCompatActivity {
     public void save(View v) {
         User user = new User("xie", "1231231");
         Long insert = baseDao.insert(user);
-        if (insert != 1) {
+        if (insert != -1) {
             Toast.makeText(this, "插入成功", Toast.LENGTH_SHORT).show();
         }
     }
 
     public void update(View v) {
         User where = new User();
-        where.setName("amrc");
+        where.setName("xie");
         User user = new User("谢之强", "xie388212");
         int update = baseDao.update(user, where);
         if (update != 0) {
@@ -68,7 +68,7 @@ public class DbActivity extends AppCompatActivity {
 
     public void query(View v) {
         User user = new User();
-        user.setName("谢志强");
+        user.setName("谢之强");
         List<User> query = baseDao.query(user);
         for (User user1 : query) {
             Log.i("marc", user1.getPassword());

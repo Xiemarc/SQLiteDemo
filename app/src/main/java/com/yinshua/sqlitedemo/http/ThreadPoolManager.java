@@ -77,4 +77,21 @@ public class ThreadPoolManager {
             }
         }
     };
+
+    /**
+     * 移除线程
+     * @param futureTask 线程任务
+     * @param <T>
+     * @return
+     */
+    public <T> boolean removeTask(FutureTask futureTask) {
+        boolean result = false;
+        //阻塞式队列是否含有线程
+        if (taskQuene.contains(futureTask)) {
+            taskQuene.remove(futureTask);
+        } else {
+            result = threadPoolExecutor.remove(futureTask);
+        }
+        return result;
+    }
 }
